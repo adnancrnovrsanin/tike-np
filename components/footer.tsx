@@ -1,5 +1,5 @@
 import React from "react";
-import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 import {
   Facebook,
@@ -12,17 +12,13 @@ import {
 
 const Footer = () => {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <footer className="flex flex-col w-[1668px] items-start gap-[50px] py-[100px] px-[113px] relative bg-white rounded-xl overflow-hidden border-2 border-[#262626] shadow-[10px_10px_0px_#262626]">
+    <div className="h-fit flex justify-center bg-[#FFF4E0]">
+      <footer className="flex flex-col h-fit w-2/3 items-start gap-[50px] pb-[30px] pt-[50px] px-[113px] relative bg-white rounded-xl overflow-hidden border-2 border-[#262626] shadow-[10px_10px_0px_#262626]">
         <div className="flex items-start gap-20 relative self-stretch w-full">
           {/* Left Container */}
           <div className="flex flex-col w-[519px] items-start gap-[50px] relative">
             <div className="flex flex-col items-start gap-5 relative self-stretch w-full">
-              <img
-                className="relative w-[228.37px] h-[50px]"
-                src="img/logo.svg"
-                alt="Logo"
-              />
+              <p className="text-3xl font-bold">TIKE.NP</p>
               <p className="relative self-stretch font-outfit font-medium text-[#4C4C4D] text-xl leading-[30px]">
                 Choose us to step confidently into a future of style,
                 performance, and reliability!
