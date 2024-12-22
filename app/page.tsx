@@ -1,32 +1,10 @@
-import Footer from "@/components/footer";
-import Navbar from "@/components/navbar";
 import ProductCard from "@/components/product-card";
 import { Button } from "@/components/ui/button";
+import { prisma } from "@/lib/prismadb";
 import Image from "next/image";
-import { createClient } from "@/supabase/server";
 
 export default async function HomePage() {
-  const supabase = await createClient();
-
-  // Sample product data
-  const products = [
-    {
-      name: "SprintMax 3000",
-      basePrice: 233,
-      imageUrl: "/assets/sprintmax-3000.jpg",
-    },
-    {
-      name: "AeroFlex Edge",
-      basePrice: 186,
-      imageUrl: "/assets/aeroflex-edge.jpg",
-    },
-    {
-      name: "ProRun Velocity",
-      basePrice: 132,
-      imageUrl: "/assets/prorun-velocity.jpg",
-    },
-    // Add other products...
-  ];
+  const products = await prisma.product.findMany();
 
   // try {
   //   await supabase.auth.signOut();

@@ -66,6 +66,10 @@ model Product {
   isActive    Boolean @default(true)
   totalStock  Int     @default(0)
 
+  // Novi atributi
+  gender Gender?
+  color  String?
+
   categoryId Int?
   category   Category? @relation(fields: [categoryId], references: [id])
 
@@ -80,18 +84,45 @@ model Product {
   @@index([categoryId])
 }
 
-// -----------------------------------------
-// RAZLIČITE VELIČINE I KOLIČINE
-// -----------------------------------------
+// Možemo dodati i enume za bolje tipiziranje
+enum Gender {
+  men
+  women
+  unisex
+}
+
+enum ClothingSize {
+  XS
+  S
+  M
+  L
+  XL
+  XXL
+}
+
+enum ShoeSize {
+  EU_35
+  EU_36
+  EU_37
+  EU_38
+  EU_39
+  EU_40
+  EU_41
+  EU_42
+  EU_43
+  EU_44
+  EU_45
+}
+
 model ProductVariant {
-  id       Int    @id @default(autoincrement())
-  size     String
-  quantity Int
+  id           Int           @id @default(autoincrement())
+  clothingSize ClothingSize? // za odeću
+  shoeSize     ShoeSize? // za obuću
+  quantity     Int
 
   productId Int
   product   Product @relation(fields: [productId], references: [id])
 
-  // Obrnuta relacija za cart items (nije obavezno ako ti ne treba)
   cartItems CartItem[]
 }
 
