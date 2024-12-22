@@ -1,5 +1,9 @@
+"use client";
+import FavoritesList from "@/components/favorites-list";
+import Pagination from "@/components/pagination-bar";
+
 const FavoritesPage = () => {
-  const products: Product[] = [
+  const products = [
     { name: "SprintMax 3000", price: 233, image: "/assets/sprintmax-3000.jpg" },
     { name: "AeroFlex Edge", price: 186, image: "/assets/aeroflex-edge.jpg" },
     { name: "Bla123", price: 186, image: "/assets/aeroflex-edge.jpg" },
@@ -14,8 +18,14 @@ const FavoritesPage = () => {
   ];
   return (
     <div className="bg-[#FFF4E0] min-h-screen">
-      <h1>Favorites</h1>
-      {/* <FavoritesList /> */}
+      <FavoritesList products={products} />
+      <div className="flex justify-end my-10">
+        <Pagination
+          currentPage={1}
+          totalPages={5}
+          onPageChange={(page) => console.log(page)}
+        />
+      </div>
     </div>
   );
 };

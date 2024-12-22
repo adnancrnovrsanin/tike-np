@@ -56,15 +56,15 @@ const Navbar = () => {
               </Button>
             </Link>
 
-            <Link href="/favourites">
+            <Link href="/favorites">
               <Button
                 variant="neutral"
                 className={cn(
                   "px-8 py-5",
-                  pathname === "/favourites" && "bg-main"
+                  pathname === "/favorites" && "bg-main"
                 )}
               >
-                Favourites
+                Favorites
               </Button>
             </Link>
 
