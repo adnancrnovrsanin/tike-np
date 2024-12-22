@@ -9,6 +9,126 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// -----------------------------------------
+// MODEL ZA DODATNE (RL) PODATKE O KORISNIKU
+// -----------------------------------------
+model UserProfile {
+  id             Int    @id @default(autoincrement())
+  supabaseUserId String @unique
+
+  // RL polja
+  age              Int?
+  averageSpent     Float?
+  priceSensitivity Float?
+
+  // Ako i dalje želiš da pratiš "koji proizvod trenutno gleda"
+  productId Int?
+  product   Product? @relation(fields: [productId], references: [id])
+
+  // Korpa (korisnik => više stavki)
+  cartItems CartItem[]
+
+  // Lista omiljenih (korisnik => više fav proizvoda)
+  favorites Favorite[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// -----------------------------------------
+// KATEGORIJE
+// -----------------------------------------
+model Category {
+  id          Int     @id @default(autoincrement())
+  category_id Int
+  name        String?
+
+  products Product[]
+}
+
+// -----------------------------------------
+// PROIZVODI
+// -----------------------------------------
+model Product {
+  id          Int     @id @default(autoincrement())
+  product_id  Int
+  name        String?
+  brand       String?
+  description String?
+  basePrice   Float
+  margin      Float
+  imageUrl    String?
+  isActive    Boolean @default(true)
+  totalStock  Int     @default(0)
+
+  categoryId Int?
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  variants    ProductVariant[]
+  UserProfile UserProfile[]
+  Favorite    Favorite[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([product_id])
+  @@index([categoryId])
+}
+
+// -----------------------------------------
+// RAZLIČITE VELIČINE I KOLIČINE
+// -----------------------------------------
+model ProductVariant {
+  id       Int    @id @default(autoincrement())
+  size     String
+  quantity Int
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+
+  // Obrnuta relacija za cart items (nije obavezno ako ti ne treba)
+  cartItems CartItem[]
+}
+
+// -----------------------------------------
+// FAVORITES: UserProfile ↔ Product
+// -----------------------------------------
+model Favorite {
+  id Int @id @default(autoincrement())
+
+  userProfileId Int
+  userProfile   UserProfile @relation(fields: [userProfileId], references: [id])
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+// -----------------------------------------
+// CART (BASKET): UserProfile ↔ ProductVariant
+// -----------------------------------------
+model CartItem {
+  id Int @id @default(autoincrement())
+
+  userProfileId Int
+  userProfile   UserProfile @relation(fields: [userProfileId], references: [id])
+
+  // Koju varijantu proizvoda je dodao
+  productVariantId Int
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id])
+
+  // Koliko komada (default 1)
+  quantity Int @default(1)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userProfileId])
+  @@index([productVariantId])
 }

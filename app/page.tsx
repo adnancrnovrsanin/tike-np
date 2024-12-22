@@ -1,24 +1,39 @@
-// page.tsx
 import Footer from "@/components/footer";
 import Navbar from "@/components/navbar";
 import ProductCard from "@/components/product-card";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Heart, ShoppingBasket } from "lucide-react";
 import Image from "next/image";
+import { createClient } from "@/supabase/server";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient();
+
   // Sample product data
-  const products: Product[] = [
-    { name: "SprintMax 3000", price: 233, image: "/assets/sprintmax-3000.jpg" },
-    { name: "AeroFlex Edge", price: 186, image: "/assets/aeroflex-edge.jpg" },
+  const products = [
+    {
+      name: "SprintMax 3000",
+      basePrice: 233,
+      imageUrl: "/assets/sprintmax-3000.jpg",
+    },
+    {
+      name: "AeroFlex Edge",
+      basePrice: 186,
+      imageUrl: "/assets/aeroflex-edge.jpg",
+    },
     {
       name: "ProRun Velocity",
-      price: 132,
-      image: "/assets/prorun-velocity.jpg",
+      basePrice: 132,
+      imageUrl: "/assets/prorun-velocity.jpg",
     },
     // Add other products...
   ];
+
+  // try {
+  //   await supabase.auth.signOut();
+  //   console.log(await supabase.auth.getUser());
+  // } catch (error) {
+  //   console.error("Error signing out:", error);
+  // }
 
   return (
     <div className="min-h-screen bg-[#FFF4E0]">
@@ -92,8 +107,8 @@ export default function HomePage() {
             <ProductCard
               key={index}
               name={product.name}
-              price={product.price.toString()}
-              imageUrl={product.image}
+              price={product.basePrice.toString()}
+              imageUrl={product.imageUrl}
             />
           ))}
         </div>
