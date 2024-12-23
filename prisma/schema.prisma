@@ -36,6 +36,14 @@ model UserProfile {
   // Lista omiljenih (korisnik => više fav proizvoda)
   favorites Favorite[]
 
+  // Adresa
+  firstName    String?
+  lastName     String?
+  address      String?
+  city         String?
+  postalCode   String?
+  phone        String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

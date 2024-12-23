@@ -1,16 +1,17 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import {useRouter} from "next/navigation";
 
 interface CartHeaderProps {
   totalPrice: number;
 }
 
 export function CartHeader({ totalPrice }: CartHeaderProps) {
-//   const router = useRouter();
+  const router = useRouter();
 
   const handleCheckout = () => {
-    // Implementirati checkout logiku
+    router.push('/checkout')
     console.log("Checkout clicked");
   };
 
