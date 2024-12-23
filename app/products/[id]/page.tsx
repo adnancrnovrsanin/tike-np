@@ -2,11 +2,13 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prismadb";
 import { createClient } from "@/supabase/server";
-import { Heart } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import ImageGallery from "./components/image-gallery";
 import SizeSelector from "./components/size-selector";
 import RelatedProducts from "./components/related-products";
+import {FavoriteButton} from "@/app/products/[id]/components/favorite-button";
+import {AddToCartButton} from "@/app/products/[id]/components/add-to-cart-button";
+import React from "react";
+import {ProductActions} from "@/app/products/[id]/components/product-actions";
 
 export default async function ProductPage({
                                               params
@@ -62,15 +64,8 @@ export default async function ProductPage({
             <div className="bg-[#fff4e0] min-h-screen">
                 <div className="container mx-auto py-8">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-                        {/* Left side - Image gallery */}
-                        <div>
-                            <ImageGallery
-                                images={images}
-                                alt={product.name || "Product"}
-                            />
-                        </div>
+                        <ImageGallery images={images} alt={product.name || "Product"} />
 
-                        {/* Right side - Product info */}
                         <div className="space-y-8">
                             <div>
                                 <h1 className="text-4xl font-bold font-raleway text-[#1e1e1e]">
@@ -81,26 +76,12 @@ export default async function ProductPage({
                                 </div>
                             </div>
 
-                            {/* Size selector */}
-                            <div>
-                                <SizeSelector variants={product.variants} />
-                            </div>
-
-                            {/* Actions */}
-                            <div className="flex items-center gap-4">
-                                <Button
-                                    variant="neutral"
-                                    size="icon"
-                                    className={`w-12 h-12 rounded-full ${
-                                        isFavorited ? "text-red-500 fill-red-500" : ""
-                                    }`}
-                                >
-                                    <Heart className="w-6 h-6" />
-                                </Button>
-
-                                <Button className="flex-1 h-12 bg-[#fd9745] hover:bg-[#fd9745]/90 text-black">
-                                    ADD TO CART
-                                </Button>
+                            <div className="space-y-8">
+                                <ProductActions
+                                    productId={product.id}
+                                    variants={product.variants}
+                                    initialIsFavorited={isFavorited}
+                                />
                             </div>
                         </div>
                     </div>

@@ -7,22 +7,23 @@ import { ProductVariant } from "@prisma/client";
 
 interface SizeSelectorProps {
     variants: ProductVariant[];
-    onSelect?: (variant: ProductVariant) => void;
+    onSelect?: (variantId: number | null) => void;
 }
 
 export default function SizeSelector({ variants, onSelect }: SizeSelectorProps) {
-    const [selectedSize, setSelectedSize] = useState<string | null>(null);
+    const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
 
     const handleSelect = (variant: ProductVariant) => {
-        setSelectedSize(variant.shoeSize || variant.clothingSize);
-        onSelect?.(variant);
+        const newId = selectedVariantId === variant.id ? null : variant.id;
+        setSelectedVariantId(newId);
+        onSelect?.(newId);
     };
 
     return (
         <div className="grid grid-cols-7 gap-2">
             {variants.map((variant) => {
                 const size = variant.shoeSize || variant.clothingSize;
-                const isSelected = selectedSize === size;
+                const isSelected = selectedVariantId === variant.id;
                 const isAvailable = variant.quantity > 0;
 
                 return (
