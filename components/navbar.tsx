@@ -76,10 +76,12 @@ const Navbar = () => {
   return (
     <div>
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex items-center justify-between bg-white rounded-xl border-2 border-[#262626]">
-          <div className="flex items-center px-6 py-5 bg-main border-r-2 border-[#262626] rounded-l-lg">
-            <span className="ml-4 font-bold text-xl">TIKE.NP</span>
-          </div>
+        <div className="flex items-center justify-between bg-white rounded-xl border-2">
+          <Link href="/">
+            <div className="flex items-center px-6 py-5 bg-main border-r-2 rounded-l-lg">
+              <span className="font-bold text-xl">TIKE.NP</span>
+            </div>
+          </Link>
 
           <div className="flex items-center gap-2">
             <Link href="/products">
@@ -146,8 +148,6 @@ const Navbar = () => {
                     <Link href="/orders">
                       <DropdownMenuItem>My Orders</DropdownMenuItem>
                     </Link>
-                    <DropdownMenuItem>Profile</DropdownMenuItem>
-                    <DropdownMenuItem>Settings</DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={handleLogout}
