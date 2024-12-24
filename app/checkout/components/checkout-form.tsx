@@ -1,167 +1,301 @@
 // app/checkout/components/checkout-form.tsx
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { checkoutFormSchema, type CheckoutFormValues } from "../schemas";
 import { toast } from "sonner";
+import { CartItem } from "@prisma/client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
 interface CheckoutFormProps {
-    savedAddress?: {
-        firstName: string | null;
-        lastName: string | null;
-        address: string | null;
-        city: string | null;
-        postalCode: string | null;
-        phone: string | null;
-    };
+  savedAddress?: {
+    firstName: string | null;
+    lastName: string | null;
+    address: string | null;
+    city: string | null;
+    postalCode: string | null;
+    phone: string | null;
+  };
+  cartTotal: number;
+  cartItems: CartItem[]; // mozemo dodati precizniji tip ako treba
 }
 
-export function CheckoutForm({ savedAddress }: CheckoutFormProps) {
-    const [isLoading, setIsLoading] = useState(false);
-    const [saveAddress, setSaveAddress] = useState(false);
-    const router = useRouter();
+export function CheckoutForm({
+  savedAddress,
+  cartTotal,
+  cartItems,
+}: CheckoutFormProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const form = useForm<CheckoutFormValues>({
+    resolver: zodResolver(checkoutFormSchema),
+    defaultValues: {
+      firstName: savedAddress?.firstName || "",
+      lastName: savedAddress?.lastName || "",
+      address: savedAddress?.address || "",
+      city: savedAddress?.city || "",
+      postalCode: savedAddress?.postalCode || "",
+      phone: savedAddress?.phone || "",
+      saveAddress: false,
+    },
+  });
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        setIsLoading(true);
+  const onSubmit = async (data: CheckoutFormValues) => {
+    try {
+      setIsLoading(true);
 
-        try {
-            const formData = new FormData(e.currentTarget);
+      // Prvo sačuvaj adresu ako je označeno
+      if (data.saveAddress) {
+        const addressRes = await fetch("/api/user/address", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            firstName: data.firstName,
+            lastName: data.lastName,
+            address: data.address,
+            city: data.city,
+            postalCode: data.postalCode,
+            phone: data.phone,
+          }),
+        });
 
-            // Ako je korisnik označio da želi da sačuva adresu
-            if (saveAddress) {
-                const addressData = {
-                    firstName: formData.get('firstName'),
-                    lastName: formData.get('lastName'),
-                    address: formData.get('address'),
-                    city: formData.get('city'),
-                    postalCode: formData.get('postalCode'),
-                    phone: formData.get('phone'),
-                };
+        if (!addressRes.ok) throw new Error("Failed to save address");
+      }
 
-                const res = await fetch('/api/user/address', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(addressData),
-                });
+      // Kreiraj order
+      const orderRes = await fetch("/api/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderData: {
+            totalAmount: cartTotal,
+            shippingAddress: {
+              firstName: data.firstName,
+              lastName: data.lastName,
+              address: data.address,
+              city: data.city,
+              postalCode: data.postalCode,
+              phone: data.phone,
+            },
+            paymentInfo: {
+              lastFourDigits: data.cardNumber.slice(-4),
+            },
+            status: "PENDING",
+          },
+          cartItems,
+        }),
+      });
 
-                if (!res.ok) throw new Error('Failed to save address');
-            }
+      if (!orderRes.ok) throw new Error("Failed to create order");
 
-            // Ovde bi išla integracija sa payment provider-om
+      router.push("/order-confirmation");
+    } catch (error) {
+      toast.error("Failed to process order");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-            toast.success("Order placed successfully!");
-            router.push('/order-confirmation');
-        } catch (error) {
-            toast.error("Something went wrong!");
-        } finally {
-            setIsLoading(false);
-        }
-    };
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Contact Information */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">Contact Information</h2>
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Input placeholder="Email" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
-    return (
-        <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-4">
-                <h2 className="text-xl font-semibold">Contact Information</h2>
-                <Input
-                    name="email"
-                    type="email"
-                    placeholder="Email"
-                    required
-                    className="w-full"
+        {/* Shipping Address */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">Shipping Address</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="firstName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input placeholder="First name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="lastName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input placeholder="Last name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="address"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Input placeholder="Address" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="city"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input placeholder="City" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="postalCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input placeholder="Postal code" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Input type="tel" placeholder="Phone" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* Payment Information */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">Payment</h2>
+          <FormField
+            control={form.control}
+            name="cardNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Input placeholder="Card number" maxLength={16} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="expiryDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input placeholder="MM/YY" maxLength={5} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="cvv"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input
+                      placeholder="CVV"
+                      maxLength={3}
+                      type="password"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        <FormField
+          control={form.control}
+          name="saveAddress"
+          render={({ field }) => (
+            <FormItem className="flex items-center space-x-2">
+              <FormControl>
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
                 />
+              </FormControl>
+              <FormLabel className="text-sm text-gray-600 cursor-pointer">
+                Save this address for future purchases
+              </FormLabel>
+            </FormItem>
+          )}
+        />
+
+        <Button
+          type="submit"
+          disabled={isLoading}
+          className="w-full bg-[#fd9745] hover:bg-[#fd9745]/90 text-black h-12"
+        >
+          {isLoading ? (
+            <div className="flex items-center justify-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Processing...
             </div>
-
-            <div className="space-y-4">
-                <h2 className="text-xl font-semibold">Shipping Address</h2>
-                <div className="grid grid-cols-2 gap-4">
-                    <Input
-                        name="firstName"
-                        placeholder="First name"
-                        defaultValue={savedAddress?.firstName || ''}
-                        required
-                    />
-                    <Input
-                        name="lastName"
-                        placeholder="Last name"
-                        defaultValue={savedAddress?.lastName || ''}
-                        required
-                    />
-                </div>
-                <Input
-                    name="address"
-                    placeholder="Address"
-                    defaultValue={savedAddress?.address || ''}
-                    required
-                />
-                <div className="grid grid-cols-2 gap-4">
-                    <Input
-                        name="city"
-                        placeholder="City"
-                        defaultValue={savedAddress?.city || ''}
-                        required
-                    />
-                    <Input
-                        name="postalCode"
-                        placeholder="Postal code"
-                        defaultValue={savedAddress?.postalCode || ''}
-                        required
-                    />
-                </div>
-                <Input
-                    name="phone"
-                    type="tel"
-                    placeholder="Phone"
-                    defaultValue={savedAddress?.phone || ''}
-                    required
-                />
-
-                <div className="flex items-center space-x-2">
-                    <Checkbox
-                        id="saveAddress"
-                        checked={saveAddress}
-                        onCheckedChange={(checked) => setSaveAddress(checked as boolean)}
-                    />
-                    <label
-                        htmlFor="saveAddress"
-                        className="text-sm text-gray-600 cursor-pointer"
-                    >
-                        Save this address for future purchases
-                    </label>
-                </div>
-            </div>
-
-            <div className="space-y-4">
-                <h2 className="text-xl font-semibold">Payment</h2>
-                <Input
-                    name="cardNumber"
-                    placeholder="Card number"
-                    required
-                />
-                <div className="grid grid-cols-2 gap-4">
-                    <Input
-                        name="expiryDate"
-                        placeholder="MM/YY"
-                        required
-                    />
-                    <Input
-                        name="cvv"
-                        placeholder="CVV"
-                        required
-                    />
-                </div>
-            </div>
-
-            <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-[#fd9745] hover:bg-[#fd9745]/90 text-black"
-            >
-                {isLoading ? "Processing..." : "Place Order"}
-            </Button>
-        </form>
-    );
+          ) : (
+            "Place Order"
+          )}
+        </Button>
+      </form>
+    </Form>
+  );
 }

@@ -19,16 +19,34 @@ import {
 
 const Navbar = () => {
   const [user, setUser] = useState<User | null>(null);
+  const [favoritesCount, setFavoritesCount] = useState(0);
+  const [cartCount, setCartCount] = useState(0);
   const supabase = createClient();
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const res = await fetch("/api/user/counts");
+        if (res.ok) {
+          const counts = await res.json();
+          setFavoritesCount(counts.favorites);
+          setCartCount(counts.cartItems);
+        }
+      } catch (error) {
+        console.error("Error fetching counts:", error);
+      }
+    };
+
     const getUser = async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
       setUser(user);
+      if (user) {
+        fetchCounts();
+      }
     };
 
     getUser();
@@ -37,6 +55,12 @@ const Navbar = () => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchCounts();
+      } else {
+        setFavoritesCount(0);
+        setCartCount(0);
+      }
     });
 
     return () => {
@@ -70,26 +94,40 @@ const Navbar = () => {
               </Button>
             </Link>
 
-            <Link href="/favorites">
-              <Button
-                variant="neutral"
-                className={cn(
-                  "px-8 py-5",
-                  pathname === "/favorites" && "bg-main"
+            <div className="relative">
+              <Link href="/favorites">
+                <Button
+                  variant="neutral"
+                  className={cn(
+                    "px-8 py-5",
+                    pathname === "/favorites" && "bg-main"
+                  )}
+                >
+                  Favorites
+                </Button>
+                {favoritesCount > 0 && (
+                  <div className="absolute -top-2 right-2 min-w-[20px] h-5 rounded-md bg-main text-text border-2 text-xs flex items-center justify-center px-1">
+                    {favoritesCount}
+                  </div>
                 )}
-              >
-                Favorites
-              </Button>
-            </Link>
+              </Link>
+            </div>
 
-            <Link href="/cart">
-              <Button
-                variant="neutral"
-                className={cn("px-8 py-5", pathname === "/cart" && "bg-main")}
-              >
-                Cart
-              </Button>
-            </Link>
+            <div className="relative">
+              <Link href="/cart">
+                <Button
+                  variant="neutral"
+                  className={cn("px-8 py-5", pathname === "/cart" && "bg-main")}
+                >
+                  Cart
+                </Button>
+                {cartCount > 0 && (
+                  <div className="absolute -top-2 right-2 min-w-[20px] h-5 rounded-md bg-main text-text border-2 text-xs flex items-center justify-center px-1">
+                    {cartCount}
+                  </div>
+                )}
+              </Link>
+            </div>
 
             {user ? (
               <div className="px-8 py-3 border-l-2">
@@ -105,6 +143,9 @@ const Navbar = () => {
                   <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuLabel>My Account</DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                    <Link href="/orders">
+                      <DropdownMenuItem>My Orders</DropdownMenuItem>
+                    </Link>
                     <DropdownMenuItem>Profile</DropdownMenuItem>
                     <DropdownMenuItem>Settings</DropdownMenuItem>
                     <DropdownMenuSeparator />

@@ -3,6 +3,7 @@ import { ProductFilters } from "@/components/product-filters";
 import { prisma } from "@/lib/prismadb";
 import { createClient } from "@/supabase/server";
 import { Gender } from "@prisma/client";
+import { ClearFiltersButton } from "./components/clear-filters-button";
 
 interface SearchParams {
   query?: string;
@@ -137,7 +138,14 @@ export default async function ProductsPage({
 
   return (
     <div className="container mx-auto p-6">
-      <ProductFilters categories={categories} brands={brands} colors={colors} />
+      <div className="flex items-center justify-between mb-6">
+        <ProductFilters
+          categories={categories}
+          brands={brands}
+          colors={colors}
+        />
+        <ClearFiltersButton />
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center mt-8">
         {products.map((product) => {
