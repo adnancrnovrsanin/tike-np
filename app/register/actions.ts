@@ -13,9 +13,15 @@ export async function signup(formData: FormData) {
     password: formData.get("password") as string,
   };
 
+  if (data.password !== formData.get("confirmPassword")) {
+    console.error("Passwords don't match");
+    redirect("/error");
+  }
+
   const { data: authData, error } = await supabase.auth.signUp(data);
 
   if (error) {
+    console.error("Error signing up:", error);
     redirect("/error");
   }
 

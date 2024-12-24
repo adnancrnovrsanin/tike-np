@@ -14,23 +14,17 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
 
-  function handleSignup(event: React.MouseEvent<HTMLButtonElement>) {
+  const handleSignUpClick = () => {
+    router.push("/login");
+  };
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = event.currentTarget.closest("form");
     if (form) {
       const formData = new FormData(form);
       signup(formData);
     }
-  }
-
-  const handleSignUpClick = () => {
-    router.push("/register");
-  };
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    // Handle registration logic here
-    console.log("Registration submitted");
   };
 
   return (
@@ -45,6 +39,7 @@ export default function RegisterPage() {
             <Input
               id="name"
               type="text"
+              name="fullName"
               placeholder="Enter your full name"
               required
               className="border-2 border-black rounded-md p-2 w-full text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
@@ -57,6 +52,7 @@ export default function RegisterPage() {
             <Input
               id="email"
               type="email"
+              name="email"
               placeholder="Enter your email"
               required
               className="border-2 border-black rounded-md p-2 w-full text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
@@ -70,6 +66,7 @@ export default function RegisterPage() {
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
+                name="password"
                 placeholder="Enter your password"
                 required
                 className="border-2 border-black rounded-md p-2 w-full text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
@@ -96,6 +93,7 @@ export default function RegisterPage() {
                 id="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
                 placeholder="Confirm your password"
+                name="confirmPassword"
                 required
                 className="border-2 border-black rounded-md p-2 w-full text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
               />
@@ -116,7 +114,6 @@ export default function RegisterPage() {
             type="submit"
             variant="neobrutalgreenaccent"
             className="w-full text-lg"
-            onClickHandler={handleSignup}
           >
             Register
           </Neobutton>
