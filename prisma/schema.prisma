@@ -44,9 +44,37 @@ model UserProfile {
   postalCode String?
   phone      String?
 
+  // Polja za praćenje ponašanja
+  viewedProducts UserActivity[]
+  priceRangeMin  Float? // najniža cena koju je korisnik platio
+  priceRangeMax  Float? // najviša cena koju je korisnik platio
+  avgOrderValue  Float? // prosečna vrednost porudžbine
+  lastCalculated DateTime? // kada su poslednji put izračunati sensitivity i avgSpent
+
+  // Težinski faktori za različite aktivnosti
+  viewWeight     Float @default(0.1)
+  cartWeight     Float @default(0.3)
+  favoriteWeight Float @default(0.2)
+  purchaseWeight Float @default(0.4)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   Order     Order[]
+}
+
+// Model za praćenje aktivnosti korisnika
+model UserActivity {
+  id            Int         @id @default(autoincrement())
+  userProfileId Int
+  userProfile   UserProfile @relation(fields: [userProfileId], references: [id])
+  productId     Int
+  product       Product     @relation(fields: [productId], references: [id])
+  activityType  String // VIEW, CART_ADD, CART_REMOVE, FAVORITE_ADD, FAVORITE_REMOVE, PURCHASE
+  metadata      Json? // dodatne informacije o aktivnosti
+  createdAt     DateTime    @default(now())
+
+  @@index([userProfileId])
+  @@index([productId])
 }
 
 // -----------------------------------------
@@ -86,11 +114,36 @@ model Product {
   UserProfile UserProfile[]
   Favorite    Favorite[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  UserActivity UserActivity[]
 
   @@index([product_id])
   @@index([categoryId])
+}
+
+// Model za popuste
+model Discount {
+  id         Int          @id @default(autoincrement())
+  code       String       @unique
+  type       DiscountType
+  value      Float // procenat ili fiksna vrednost u zavisnosti od tipa
+  minAmount  Float? // minimalni iznos za primenu popusta
+  maxAmount  Float? // maksimalni iznos popusta
+  isActive   Boolean      @default(true)
+  startDate  DateTime
+  endDate    DateTime?
+  usageLimit Int? // koliko puta se može iskoristiti
+  usageCount Int          @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Tipovi popusta
+enum DiscountType {
+  PERCENTAGE // npr. 20% off
+  FIXED // npr. $10 off
 }
 
 // Možemo dodati i enume za bolje tipiziranje
