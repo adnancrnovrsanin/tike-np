@@ -24,7 +24,9 @@ export async function POST(req: Request) {
       return new NextResponse("User profile not found", { status: 404 });
     }
 
-    // Dodaj aktivnost
+    // -----------------------------
+    // Dodaj aktivnost u bazu
+    // -----------------------------
     await prisma.userActivity.create({
       data: {
         userProfileId: userProfile.id,
@@ -34,9 +36,9 @@ export async function POST(req: Request) {
       },
     });
 
-    // Ažuriraj price sensitivity i average spend
-    // Ovo bi trebalo da se radi periodično ili u background job-u,
-    // ali za demonstraciju ćemo raditi odmah
+    // -----------------------------
+    // Ažuriraj priceSensitivity i averageSpent
+    // -----------------------------
     await calculateUserMetrics(userProfile.id);
 
     return NextResponse.json({ success: true });
@@ -50,11 +52,13 @@ async function calculateUserMetrics(userProfileId: number) {
   const weights = {
     VIEW: 0.1,
     CART_ADD: 0.3,
+    CART_REMOVE: -0.15,
     FAVORITE_ADD: 0.2,
+    FAVORITE_REMOVE: -0.1,
     PURCHASE: 0.4,
   };
 
-  // Dohvati sve aktivnosti korisnika
+  // Dohvati sve aktivnosti korisnika u poslednjih 30 dana
   const activities = await prisma.userActivity.findMany({
     where: {
       userProfileId,
@@ -67,37 +71,75 @@ async function calculateUserMetrics(userProfileId: number) {
     },
   });
 
-  // Računanje price sensitivity
   let sensitivityScore = 0;
   let totalWeight = 0;
 
   activities.forEach((activity) => {
+    // Koliko vredi aktivnost
     const weight = weights[activity.activityType as keyof typeof weights] || 0;
+
+    // Cena proizvoda = basePrice * (1 + margin)
     const price = activity.product.basePrice * (1 + activity.product.margin);
 
-    // Ako je korisnik kupio skuplje proizvode, manje je price sensitive
-    if (activity.activityType === "PURCHASE") {
-      sensitivityScore += (1 - price / 1000) * weight; // normalizujemo cenu
-    }
-    // Ako često gleda skuplje proizvode ali ih ne kupuje, više je price sensitive
-    else if (activity.activityType === "VIEW") {
-      sensitivityScore += (price / 1000) * weight;
+    // Osnovna logika za PURCHASE i VIEW,
+    // a možeš proširiti za CART_ADD, CART_REMOVE itd.
+    switch (activity.activityType) {
+      case "PURCHASE":
+        // Kupio je skuplji proizvod => manja osetljivost na cenu
+        sensitivityScore += (1 - price / 1000) * weight;
+        break;
+
+      case "VIEW":
+        // Gleda skuplje proizvode, ali ne kupuje => veća osetljivost
+        sensitivityScore += (price / 1000) * weight;
+        break;
+
+      // NEW: Primer kako da tretiraš CART_ADD
+      case "CART_ADD":
+        // Dodaje skuplji proizvod u korpu => znači manja osetljivost?
+        sensitivityScore += (1 - price / 1000) * weight;
+        break;
+
+      // NEW: CART_REMOVE => možda "unazadimo" malo score
+      //     (po želji: možeš i da ga preskočiš ili dodaš drugačiju logiku)
+      case "CART_REMOVE":
+        // Ako uklanja skuplji proizvod iz korpe => veća osetljivost
+        sensitivityScore += (price / 1000) * weight;
+        break;
+
+      // NEW: FAVORITE_ADD => slično, čovek je "zainteresovan" za proizvod
+      case "FAVORITE_ADD":
+        sensitivityScore += (1 - price / 1000) * weight;
+        break;
+
+      // NEW: FAVORITE_REMOVE => signal da ipak nije toliko zainteresovan
+      case "FAVORITE_REMOVE":
+        sensitivityScore += (price / 1000) * weight;
+        break;
+
+      // default: ako ne postoji u weights, ignorišemo
+      default:
+        break;
     }
 
-    totalWeight += weight;
+    totalWeight += Math.abs(weight); // obrati pažnju na ABS ako radiš s negativnim tegovima
   });
 
-  const priceSensitivity =
+  // Ako totalWeight ispadne 0, nek priceSensitivity bude default 0.5
+  const rawPriceSensitivity =
     totalWeight > 0 ? sensitivityScore / totalWeight : 0.5;
 
-  // Računanje average spend
+  // Price sensitivity je u opsegu [0, 1]
+  const priceSensitivity = Math.max(0, Math.min(1, rawPriceSensitivity));
+
+  // Računanje averageSpent (samo za PURCHASE)
   const purchases = activities.filter((a) => a.activityType === "PURCHASE");
   const totalSpend = purchases.reduce((sum, p) => {
     return sum + p.product.basePrice * (1 + p.product.margin);
   }, 0);
   const averageSpent = purchases.length > 0 ? totalSpend / purchases.length : 0;
 
-  // Ažuriraj UserProfile
+  // Ažuriraj userProfile
   await prisma.userProfile.update({
     where: { id: userProfileId },
     data: {

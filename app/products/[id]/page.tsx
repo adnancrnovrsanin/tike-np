@@ -15,6 +15,8 @@ export default async function ProductPage({
   try {
     const supabase = await createClient();
     const productId = parseInt(params.id);
+    let isFavorited = false;
+    let isAddedToCart = false;
 
     const {
       data: { user },
@@ -34,9 +36,6 @@ export default async function ProductPage({
       return notFound();
     }
 
-    // Proveri favorite status ako je korisnik ulogovan
-    let isFavorited = false;
-
     if (user) {
       const userProfile = await prisma.userProfile.findUnique({
         where: {
@@ -48,11 +47,25 @@ export default async function ProductPage({
               productId,
             },
           },
+          cartItems: {
+            include: {
+              productVariant: {
+                include: {
+                  product: true,
+                },
+              },
+            },
+          },
         },
       });
 
       if (userProfile) {
-        isFavorited = userProfile.favorites.length > 0;
+        isFavorited = userProfile.favorites.some(
+          (f) => f.productId === productId
+        );
+        isAddedToCart = userProfile.cartItems.some(
+          (ci) => ci.productVariant.productId === productId
+        );
 
         if (product) {
           const finalPrice = product.basePrice * (1 + product.margin);
@@ -95,6 +108,10 @@ export default async function ProductPage({
                   productId={product.id}
                   variants={product.variants}
                   initialIsFavorited={isFavorited}
+                  initialIsAddedToCart={isAddedToCart}
+                  basePrice={product.basePrice}
+                  margin={product.margin}
+                  id={product.id}
                 />
               </div>
             </div>
