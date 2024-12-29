@@ -43,6 +43,7 @@ export default function LoginPage() {
             <Input
               id="email"
               type="email"
+              name="email"
               placeholder="Enter your email"
               required
               className="border-2 border-black rounded-md p-2 w-full text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
@@ -57,6 +58,7 @@ export default function LoginPage() {
                 id="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
+                name="password"
                 required
                 className="border-2 border-black rounded-md p-2 w-full text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
               />
