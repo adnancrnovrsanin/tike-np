@@ -58,6 +58,27 @@ export function CheckoutForm({
     try {
       setIsLoading(true);
 
+      try {
+        // Send purchase interaction for each item
+
+        const purchasePromises = cartItems.map((item) =>
+          fetch("http://localhost:5000/interact", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              id: item.productVariant.product.id,
+              interaction_type: "purchase",
+            }),
+          })
+        );
+        await Promise.all(purchasePromises);
+      } catch (error) {
+        console.error("Error tracking purchases:", error);
+      }
+
+      console.log("RADDDIIIII");
       // Prvo sačuvaj adresu ako je označeno
       if (data.saveAddress) {
         const addressRes = await fetch("/api/user/address", {

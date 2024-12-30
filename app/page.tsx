@@ -4,14 +4,17 @@ import { prisma } from "@/lib/prismadb";
 import Image from "next/image";
 
 export default async function HomePage() {
-  const products = await prisma.product.findMany();
+  // const products = await prisma.product.findMany();
+  let products = [];
 
-  // try {
-  //   await supabase.auth.signOut();
-  //   console.log(await supabase.auth.getUser());
-  // } catch (error) {
-  //   console.error("Error signing out:", error);
-  // }
+  const response = await fetch("http://localhost:5000/recommend?num=3");
+  if (!response.ok) {
+    products = await prisma.product.findMany();
+    throw new Error("Failed to fetch recommendations");
+  } else {
+    const data = await response.json();
+    products = data.recommendations;
+  }
 
   return (
     <div className="min-h-screen bg-[#FFF4E0]">
@@ -84,6 +87,7 @@ export default async function HomePage() {
           {products.map((product, index) => (
             <ProductCard
               key={index}
+              id={product.id}
               name={product.name}
               price={product.basePrice.toString()}
               imageUrl={product.imageUrl}
