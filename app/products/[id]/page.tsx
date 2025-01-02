@@ -6,6 +6,7 @@ import ImageGallery from "./components/image-gallery";
 import RelatedProducts from "./components/related-products";
 import React from "react";
 import { ProductActions } from "@/app/products/[id]/components/product-actions";
+import { PriceDisplayContainer } from "@/components/price-display-container";
 
 export default async function ProductPage({
   params,
@@ -14,7 +15,13 @@ export default async function ProductPage({
 }) {
   try {
     const supabase = await createClient();
-    const productId = parseInt(params.id);
+    const productId = Number(params.id);
+
+    // Provera da li je ID validan broj
+    if (!productId || isNaN(productId)) {
+      return notFound();
+    }
+
     let isFavorited = false;
     let isAddedToCart = false;
 
@@ -36,8 +43,10 @@ export default async function ProductPage({
       return notFound();
     }
 
+    let userProfile = null;
+
     if (user) {
-      const userProfile = await prisma.userProfile.findUnique({
+      userProfile = await prisma.userProfile.findUnique({
         where: {
           supabaseUserId: user.id,
         },
@@ -59,6 +68,9 @@ export default async function ProductPage({
         },
       });
 
+      // Ako je korisnik ulogovan ali userProfile nije pronađen, po potrebi kreiraj novi:
+      // userProfile = await prisma.userProfile.create(...) ili slično
+
       if (userProfile) {
         isFavorited = userProfile.favorites.some(
           (f) => f.productId === productId
@@ -67,25 +79,32 @@ export default async function ProductPage({
           (ci) => ci.productVariant.productId === productId
         );
 
-        if (product) {
-          const finalPrice = product.basePrice * (1 + product.margin);
-
-          await prisma.userActivity.create({
-            data: {
-              userProfileId: userProfile.id,
-              productId,
-              activityType: "VIEW",
-              metadata: {
-                price: finalPrice,
-              },
+        // Zabeležimo "VIEW" aktivnost
+        await prisma.userActivity.create({
+          data: {
+            userProfileId: userProfile.id,
+            productId,
+            activityType: "VIEW",
+            metadata: {
+              price: product.basePrice * (1 + product.margin),
             },
-          });
-        }
+          },
+        });
       }
     }
 
     const productImage = product.imageUrl || "/placeholder.png";
+    // Za sada pravimo array sa istom slikom, ali u produkciji ovo može da bude niz različitih URL-ova
     const images = [productImage, productImage, productImage];
+
+    // userData (za personalizovane cene)
+    const userData = userProfile
+      ? {
+          age: userProfile.age,
+          averageSpent: userProfile.averageSpent,
+          priceSensitivity: userProfile.priceSensitivity,
+        }
+      : null;
 
     return (
       <div className="bg-[#fff4e0] min-h-screen">
@@ -98,9 +117,12 @@ export default async function ProductPage({
                 <h1 className="text-4xl font-bold font-raleway text-[#1e1e1e]">
                   {product.name}
                 </h1>
-                <div className="mt-4 text-3xl font-outfit">
-                  ${(product.basePrice * (1 + product.margin)).toFixed(2)}
-                </div>
+                <PriceDisplayContainer
+                  productId={product.id}
+                  basePrice={product.basePrice}
+                  margin={product.margin}
+                  userData={userData}
+                />
               </div>
 
               <div className="space-y-8">
@@ -112,6 +134,7 @@ export default async function ProductPage({
                   basePrice={product.basePrice}
                   margin={product.margin}
                   id={product.id}
+                  userData={userData}
                 />
               </div>
             </div>

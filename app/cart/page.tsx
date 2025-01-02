@@ -59,12 +59,6 @@ export default async function CartPage() {
     userProfile.favorites.map((favorite) => favorite.productId)
   );
 
-  const totalPrice = userProfile.cartItems.reduce((sum, cartItem) => {
-    const product = cartItem.productVariant.product;
-    const price = product.basePrice * (1 + product.margin);
-    return sum + price * cartItem.quantity;
-  }, 0);
-
   if (userProfile.cartItems.length === 0) {
     return (
       <div className="container mx-auto p-6">
@@ -76,6 +70,9 @@ export default async function CartPage() {
       </div>
     );
   }
+  const totalPrice = userProfile.cartItems.reduce((sum, cartItem) => {
+    return sum + cartItem.price * cartItem.quantity;
+  }, 0);
 
   return (
     <div className="container mx-auto p-6">
@@ -83,19 +80,20 @@ export default async function CartPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
         {userProfile.cartItems.map(
-          ({ id: cartItemId, productVariant, quantity }) => {
+          ({ id: cartItemId, productVariant, quantity, price }) => {
             const product = productVariant.product;
-            const finalPrice = product.basePrice * (1 + product.margin);
 
             return (
               <div key={productVariant.id} className="w-full">
                 <ProductCard
                   id={product.id}
                   name={product.name || "Unnamed Product"}
-                  price={finalPrice.toFixed(2)}
+                  basePrice={product.basePrice}
+                  margin={product.margin}
                   imageUrl={product.imageUrl || "/placeholder.png"}
                   isAddedToCart={true}
                   isFavorited={favoriteProductIds.has(product.id)}
+                  fixedPrice={price} // Dodajemo sačuvanu cenu
                 />
                 <div className="mt-4 flex items-center justify-between px-4">
                   <CartItemControls

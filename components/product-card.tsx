@@ -9,29 +9,34 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { PriceDisplay } from "@/components/price-display";
 
 interface ProductCardProps {
   id: number;
   name: string;
-  price: string;
+  basePrice: number;
+  margin: number;
   imageUrl: string;
   isAddedToCart: boolean;
   isFavorited: boolean;
-  basePrice: number;
-  margin: number;
+  personalizedPrice?: number | null;
+  fixedPrice?: number; // Nova opcija za fiksnu cenu
+  isLoading?: boolean;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
   id,
   name,
-  price,
   imageUrl,
   isAddedToCart: initialIsAddedToCart,
   isFavorited: initialIsFavorited,
   basePrice,
   margin,
+  personalizedPrice,
+  fixedPrice,
+  isLoading = false,
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingState, setIsLoading] = useState(false);
   const [isAddedToCart, setIsAddedToCart] = useState(initialIsAddedToCart);
   const [isFavorited, setIsFavorited] = useState(initialIsFavorited);
   const router = useRouter();
@@ -210,9 +215,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
             />
           </button>
 
-          <p className="font-outfit font-medium text-3xl text-black">
-            ${price}
-          </p>
+          <PriceDisplay
+            basePrice={basePrice}
+            margin={margin}
+            personalizedPrice={fixedPrice || personalizedPrice}
+            isLoading={isLoading}
+          />
 
           <button
             className={cn(
@@ -222,7 +230,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               e.preventDefault();
               handleFavoriteToggle();
             }}
-            disabled={isLoading}
+            disabled={isLoadingState}
           >
             <Heart
               className={cn(

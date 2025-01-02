@@ -1,9 +1,9 @@
-import ProductCard from "@/components/product-card";
 import { ProductFilters } from "@/components/product-filters";
 import { prisma } from "@/lib/prismadb";
 import { createClient } from "@/supabase/server";
 import { Gender } from "@prisma/client";
 import { ClearFiltersButton } from "./components/clear-filters-button";
+import ProductsGrid from "./components/products-grid";
 
 interface SearchParams {
   query?: string;
@@ -25,7 +25,6 @@ export default async function ProductsPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Prvo dohvatimo UserProfile ako postoji korisnik
   const userProfile = user
     ? await prisma.userProfile.findUnique({
         where: {
@@ -34,9 +33,7 @@ export default async function ProductsPage({
       })
     : null;
 
-  // Paralelno dohvatamo sve podatke
   const [categories, products, cartItems, favorites] = await Promise.all([
-    // Kategorije
     prisma.category.findMany().then((categories) =>
       categories.map((category) => ({
         ...category,
@@ -44,7 +41,6 @@ export default async function ProductsPage({
       }))
     ),
 
-    // Proizvodi sa filterima
     prisma.product.findMany({
       where: {
         isActive: true,
@@ -84,7 +80,6 @@ export default async function ProductsPage({
       },
     }),
 
-    // Cart items - koristimo userProfile.id
     userProfile
       ? prisma.cartItem.findMany({
           where: {
@@ -100,7 +95,6 @@ export default async function ProductsPage({
         })
       : Promise.resolve([]),
 
-    // Favorites - koristimo userProfile.id
     userProfile
       ? prisma.favorite.findMany({
           where: {
@@ -113,13 +107,11 @@ export default async function ProductsPage({
       : Promise.resolve([]),
   ]);
 
-  // Kreiramo setove za proizvode u korpi i omiljene proizvode
   const cartProductIds = new Set(
     cartItems.map((item) => item.productVariant.productId)
   );
   const favoriteProductIds = new Set(favorites.map((item) => item.productId));
 
-  // Izvlačimo jedinstvene vrednosti za filtere
   const brands = [
     ...new Set(
       products
@@ -136,6 +128,15 @@ export default async function ProductsPage({
     ),
   ];
 
+  // Pripremi userData za personalizovane cene
+  const userData = userProfile
+    ? {
+        age: userProfile.age,
+        averageSpent: userProfile.averageSpent,
+        priceSensitivity: userProfile.priceSensitivity,
+      }
+    : null;
+
   return (
     <div className="container mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
@@ -147,28 +148,12 @@ export default async function ProductsPage({
         <ClearFiltersButton />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center mt-8">
-        {products.map((product) => {
-          const finalPrice = product.basePrice * (1 + product.margin);
-          return (
-            <ProductCard
-              key={product.id}
-              id={product.id}
-              name={product.name || "Unnamed Product"}
-              price={finalPrice.toFixed(2)}
-              imageUrl={product.imageUrl || "/placeholder.png"}
-              isAddedToCart={cartProductIds.has(product.id)}
-              isFavorited={favoriteProductIds.has(product.id)}
-            />
-          );
-        })}
-
-        {products.length === 0 && (
-          <div className="col-span-full text-center py-10">
-            <p className="text-gray-500">No products found</p>
-          </div>
-        )}
-      </div>
+      <ProductsGrid
+        products={products}
+        cartProductIds={cartProductIds}
+        favoriteProductIds={favoriteProductIds}
+        userData={userData}
+      />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { createClient } from "@/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
+  console.log("POST REQ", req);
   try {
     const supabase = await createClient();
     const {
@@ -17,7 +18,7 @@ export async function POST(req: Request) {
     // Osiguraj da postoji UserProfile
     await ensureUserProfile(user.id);
 
-    const { productId } = await req.json();
+    const { productId, personalizedPrice } = await req.json();
 
     if (!productId) {
       return new NextResponse("Product ID is required", { status: 400 });
@@ -30,6 +31,9 @@ export async function POST(req: Request) {
         quantity: {
           gt: 0,
         },
+      },
+      include: {
+        product: true,
       },
     });
 
@@ -50,6 +54,7 @@ export async function POST(req: Request) {
           },
         },
         quantity: 1,
+        price: personalizedPrice,
       },
     });
 

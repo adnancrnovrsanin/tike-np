@@ -7,13 +7,35 @@ export default async function HomePage() {
   // const products = await prisma.product.findMany();
   let products = [];
 
-  const response = await fetch("http://localhost:5000/recommend?num=3");
-  if (!response.ok) {
-    products = await prisma.product.findMany();
-    throw new Error("Failed to fetch recommendations");
-  } else {
-    const data = await response.json();
-    products = data.recommendations;
+  try {
+    const response = await fetch("http://localhost:5000/recommend?num=3");
+    if (!response.ok) {
+      products = await prisma.product.findMany({
+        take: 3,
+        where: { isActive: true },
+      });
+    } else {
+      const data = await response.json();
+      // Konvertuj string ID-jeve u brojeve
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const recommendedIds = data.recommendations.map((item: any) =>
+        parseInt(item.id)
+      );
+
+      products = await prisma.product.findMany({
+        where: {
+          id: {
+            in: recommendedIds,
+          },
+        },
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching recommendations:", error);
+    products = await prisma.product.findMany({
+      take: 3,
+      where: { isActive: true },
+    });
   }
 
   return (
@@ -88,9 +110,12 @@ export default async function HomePage() {
             <ProductCard
               key={index}
               id={product.id}
-              name={product.name}
-              price={product.basePrice.toString()}
-              imageUrl={product.imageUrl}
+              name={product.name || "Unnamed Product"}
+              basePrice={product.basePrice}
+              margin={product.margin}
+              imageUrl={product.imageUrl || "/placeholder.png"}
+              isAddedToCart={false} // Dodaj ovo
+              isFavorited={false}
             />
           ))}
         </div>
