@@ -1,6 +1,7 @@
 // app/products/[id]/components/related-products.tsx
 import { prisma } from "@/lib/prismadb";
 import ProductCard from "@/components/product-card";
+import { Product } from "@prisma/client";
 
 interface RelatedProductsProps {
   currentProductId: number;
@@ -13,7 +14,7 @@ export default async function RelatedProducts({
 }: RelatedProductsProps) {
   let relatedProducts = [];
 
-  const response = await fetch("http://localhost:5000/recommend?num=3");
+  const response = await fetch(`${process.env.NEXT_PUBLIC_FLASK_API_URL}/recommend?num=3`);
   if (!response.ok) {
     relatedProducts = await prisma.product.findMany({
       where: {
@@ -31,14 +32,14 @@ export default async function RelatedProducts({
   }
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {relatedProducts.map((product) => {
-        const finalPrice = product.basePrice * (1 + product.margin);
+      {relatedProducts.map((product: Product) => {
         return (
           <ProductCard
             key={product.id}
             id={product.id}
             name={product.name || "Unnamed Product"}
-            price={finalPrice.toFixed(2)}
+            basePrice={product.basePrice}
+            margin={product.margin}
             imageUrl={product.imageUrl || "/placeholder.png"}
             isAddedToCart={false}
             isFavorited={false}

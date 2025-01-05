@@ -28,21 +28,24 @@ export function PriceDisplayContainer({
   useEffect(() => {
     const fetchPrice = async () => {
       try {
-        const response = await fetch("http://localhost:5000/predict-price", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            user_data: {
-              age: userData?.age ?? 30,
-              average_spent: userData?.averageSpent ?? 300,
-              price_sensitivity: userData?.priceSensitivity ?? 0.5,
-              base_price: basePrice,
-              margin: margin,
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_FLASK_API_URL}/predict-price`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
             },
-          }),
-        });
+            body: JSON.stringify({
+              user_data: {
+                age: userData?.age ?? 30,
+                average_spent: userData?.averageSpent ?? 300,
+                price_sensitivity: userData?.priceSensitivity ?? 0.5,
+                base_price: basePrice,
+                margin: margin,
+              },
+            }),
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Failed to fetch price");

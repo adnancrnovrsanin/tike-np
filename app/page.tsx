@@ -8,7 +8,7 @@ export default async function HomePage() {
   let products = [];
 
   try {
-    const response = await fetch("http://localhost:5000/recommend?num=3");
+    const response = await fetch(`${process.env.NEXT_PUBLIC_FLASK_API_URL}/recommend?num=3`);
     if (!response.ok) {
       products = await prisma.product.findMany({
         take: 3,

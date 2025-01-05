@@ -21,7 +21,6 @@ export function CartSummary({ items, total }: CartSummaryProps) {
             <div className="divide-y">
                 {items.map((item) => {
                     const product = item.productVariant.product;
-                    const price = product.basePrice * (1 + product.margin);
 
                     return (
                         <div key={item.id} className="py-4 flex gap-4">
@@ -43,7 +42,7 @@ export function CartSummary({ items, total }: CartSummaryProps) {
                                 </p>
                             </div>
                             <div className="font-medium">
-                                ${(price * item.quantity).toFixed(2)}
+                                ${(item.price * item.quantity).toFixed(2)}
                             </div>
                         </div>
                     );

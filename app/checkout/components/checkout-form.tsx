@@ -62,7 +62,7 @@ export function CheckoutForm({
         // Send purchase interaction for each item
 
         const purchasePromises = cartItems.map((item) =>
-          fetch("http://localhost:5000/interact", {
+          fetch(`${process.env.NEXT_PUBLIC_FLASK_API_URL}/interact`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -78,7 +78,6 @@ export function CheckoutForm({
         console.error("Error tracking purchases:", error);
       }
 
-      console.log("RADDDIIIII");
       // Prvo sačuvaj adresu ako je označeno
       if (data.saveAddress) {
         const addressRes = await fetch("/api/user/address", {

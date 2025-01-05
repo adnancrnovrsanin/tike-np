@@ -45,7 +45,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const handleClick = async () => {
     if (!id) return;
     try {
-      await fetch("http://localhost:5000/interact", {
+      await fetch(`${process.env.NEXT_PUBLIC_FLASK_API_URL}/interact`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

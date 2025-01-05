@@ -38,10 +38,7 @@ export default async function CheckoutPage() {
   }
 
   const total = userProfile.cartItems.reduce((sum, item) => {
-    const price =
-      item.productVariant.product.basePrice *
-      (1 + item.productVariant.product.margin);
-    return sum + price * item.quantity;
+    return sum + item.price * item.quantity;
   }, 0);
 
   return (
