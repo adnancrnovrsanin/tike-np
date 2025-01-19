@@ -74,7 +74,10 @@ export function PriceDisplay({
   return (
     <div className={containerClasses}>
       <span className={discountedPriceClasses}>
-        ${originalPrice.toFixed(2)}
+        $
+        {!Number.isNaN(originalPrice)
+          ? originalPrice.toFixed(2)
+          : basePrice.toFixed(2)}
       </span>
     </div>
   );
