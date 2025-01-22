@@ -20,6 +20,7 @@ datasource db {
 model UserProfile {
   id             Int    @id @default(autoincrement())
   supabaseUserId String @unique
+  email          String @default("")
 
   // RL polja
   age              Int?
@@ -43,6 +44,8 @@ model UserProfile {
   city       String?
   postalCode String?
   phone      String?
+
+  blocked Boolean @default(false)
 
   // Polja za praćenje ponašanja
   viewedProducts UserActivity[]

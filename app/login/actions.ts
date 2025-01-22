@@ -1,3 +1,4 @@
+// app/actions/login.ts
 "use server";
 
 import { revalidatePath } from "next/cache";
@@ -29,11 +30,22 @@ export async function login(formData: FormData) {
         },
       });
 
-      // Ako ne postoji, kreiraj ga
       if (!existingProfile) {
+        // Ako ne postoji, kreiraj ga sa emailom
         await prisma.userProfile.create({
           data: {
             supabaseUserId: authData.user.id,
+            email: authData.user.email ?? "",
+          },
+        });
+      } else if (!existingProfile.email) {
+        // Ako postoji ali nema email, dodaj ga
+        await prisma.userProfile.update({
+          where: {
+            id: existingProfile.id,
+          },
+          data: {
+            email: authData.user.email,
           },
         });
       }

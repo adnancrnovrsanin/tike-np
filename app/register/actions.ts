@@ -1,3 +1,4 @@
+// app/actions/signup.ts
 "use server";
 
 import { revalidatePath } from "next/cache";
@@ -31,6 +32,7 @@ export async function signup(formData: FormData) {
       await prisma.userProfile.create({
         data: {
           supabaseUserId: authData.user.id,
+          email: authData.user.email ?? "",
         },
       });
     } catch (error) {

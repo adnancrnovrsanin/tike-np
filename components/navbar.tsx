@@ -1,3 +1,4 @@
+// components/Navbar.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -16,9 +17,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { LayoutDashboard } from "lucide-react"; // Dodajemo ikonicu za admin panel
 
 const Navbar = () => {
   const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [favoritesCount, setFavoritesCount] = useState(0);
   const [cartCount, setCartCount] = useState(0);
   const supabase = createClient();
@@ -44,6 +47,7 @@ const Navbar = () => {
         data: { user },
       } = await supabase.auth.getUser();
       setUser(user);
+      setIsAdmin(user?.email === "adnancrnovrsanin48@gmail.com");
       if (user) {
         fetchCounts();
       }
@@ -55,6 +59,7 @@ const Navbar = () => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      setIsAdmin(session?.user?.email === "adnancrnovrsanin48@gmail.com");
       if (session?.user) {
         fetchCounts();
       } else {
@@ -145,6 +150,17 @@ const Navbar = () => {
                   <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuLabel>My Account</DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                    {isAdmin && (
+                      <>
+                        <Link href="/admin">
+                          <DropdownMenuItem>
+                            <LayoutDashboard className="mr-2 h-4 w-4" />
+                            Admin Dashboard
+                          </DropdownMenuItem>
+                        </Link>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
                     <Link href="/orders">
                       <DropdownMenuItem>My Orders</DropdownMenuItem>
                     </Link>
