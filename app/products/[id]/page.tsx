@@ -68,8 +68,8 @@ export default async function ProductPage({
         },
       });
 
-      // Ako je korisnik ulogovan ali userProfile nije pronađen, po potrebi kreiraj novi:
-      // userProfile = await prisma.userProfile.create(...) ili slično
+      // If user is logged in but userProfile not found, create new if needed:
+      // userProfile = await prisma.userProfile.create(...) or similar
 
       if (userProfile) {
         isFavorited = userProfile.favorites.some(
@@ -79,7 +79,7 @@ export default async function ProductPage({
           (ci) => ci.productVariant.productId === productId
         );
 
-        // Zabeležimo "VIEW" aktivnost
+        // Record "VIEW" activity
         await prisma.userActivity.create({
           data: {
             userProfileId: userProfile.id,
@@ -94,7 +94,7 @@ export default async function ProductPage({
     }
 
     const productImage = product.imageUrl || "/placeholder.png";
-    // Za sada pravimo array sa istom slikom, ali u produkciji ovo može da bude niz različitih URL-ova
+    // For now creating an array with the same image, but in production this can be an array of different URLs
     const images = [productImage, productImage, productImage];
 
     // userData (za personalizovane cene)

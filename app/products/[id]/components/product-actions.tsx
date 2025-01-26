@@ -50,10 +50,10 @@ export function ProductActions({
     isLoading: priceIsLoading,
   } = usePersonalizedPrice(productId, basePrice, margin, userData);
 
-  // Helper funkcija za praćenje aktivnosti
+  // Helper function for tracking activities
   const trackActivity = async (activityType: string) => {
     try {
-      // Uzimamo "finalPrice" iz hookPersonalizedPrice ili računamo fallback
+      // Get "finalPrice" from hookPersonalizedPrice or calculate fallback
       const finalPrice = hookPersonalizedPrice || basePrice * (1 + margin);
 
       await fetch("/api/user/activity", {
@@ -76,7 +76,7 @@ export function ProductActions({
   const handleToggleCart = async () => {
     try {
       setActionLoading(true);
-      // Iz hook-a uzimamo "hookPersonalizedPrice", ali ga sada čuvamo u finalPrice
+      // Get "hookPersonalizedPrice" from the hook and store it in finalPrice
       const finalPrice = hookPersonalizedPrice || basePrice * (1 + margin);
       console.log("1. Starting cart toggle with:", {
         productId,
@@ -135,7 +135,7 @@ export function ProductActions({
         setIsAddedToCart(true);
         toast.success("Added to cart!");
       } else {
-        // Ako već jeste u korpi, znači da ga uklanjamo
+        // If it's already in cart, remove it
         await trackActivity("CART_REMOVE");
         const res = await fetch(`/api/cart`, {
           method: "DELETE",
@@ -177,7 +177,7 @@ export function ProductActions({
         return;
       }
 
-      // Beležimo aktivnost
+      // Record activity
       if (!isFavorited) {
         await trackActivity("FAVORITE_ADD");
       } else {

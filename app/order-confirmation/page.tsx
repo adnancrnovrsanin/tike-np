@@ -17,7 +17,7 @@ export default async function OrderConfirmationPage() {
     redirect("/login");
   }
 
-  // Dohvati poslednju porudžbinu korisnika
+  // Get user's last order
   const lastOrder = await prisma.order.findFirst({
     where: {
       userProfile: {

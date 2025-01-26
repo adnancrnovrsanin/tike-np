@@ -93,7 +93,7 @@ export default async function CartPage() {
                   imageUrl={product.imageUrl || "/placeholder.png"}
                   isAddedToCart={true}
                   isFavorited={favoriteProductIds.has(product.id)}
-                  fixedPrice={price} // Dodajemo sačuvanu cenu
+                  fixedPrice={price} // Add saved price
                 />
                 <div className="mt-4 flex items-center justify-between px-4">
                   <CartItemControls

@@ -31,7 +31,7 @@ interface CheckoutFormProps {
     phone: string | null;
   };
   cartTotal: number;
-  cartItems: CartItem[]; // mozemo dodati precizniji tip ako treba
+  cartItems: CartItem[]; // we can add a more precise type if needed
 }
 
 export function CheckoutForm({
@@ -78,7 +78,7 @@ export function CheckoutForm({
         console.error("Error tracking purchases:", error);
       }
 
-      // Prvo sačuvaj adresu ako je označeno
+      // First save the address if checked
       if (data.saveAddress) {
         const addressRes = await fetch("/api/user/address", {
           method: "POST",
@@ -96,7 +96,7 @@ export function CheckoutForm({
         if (!addressRes.ok) throw new Error("Failed to save address");
       }
 
-      // Kreiraj order
+      // Create order
       const orderRes = await fetch("/api/order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

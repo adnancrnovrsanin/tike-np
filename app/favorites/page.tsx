@@ -7,7 +7,7 @@ import { HeartOff } from "lucide-react";
 export default async function FavoritesPage() {
   const supabase = await createClient();
 
-  // Dohvati trenutnog korisnika
+  // Get current user
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -22,7 +22,7 @@ export default async function FavoritesPage() {
     );
   }
 
-  // Dohvati UserProfile i njegove favorite sa proizvodima
+  // Get UserProfile and their favorites with products
   const userProfile = await prisma.userProfile.findUnique({
     where: {
       supabaseUserId: user.id,
@@ -57,7 +57,7 @@ export default async function FavoritesPage() {
     );
   }
 
-  // Kreiranje seta proizvoda koji su u korpi
+  // Create a set of products that are in cart
   const cartProductIds = new Set(
     userProfile.cartItems.map((item) => item.productVariant.product.id)
   );
